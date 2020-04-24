@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const app = require("express")();
 const serviceAccount = require("../../../Downloads/social-project-87c4c68cc54f.json");
 
 admin.initializeApp({
@@ -7,13 +8,25 @@ admin.initializeApp({
   databaseURL: "https://social-project-cc707.firebaseio.com",
 });
 
-const express = require("express");
-const app = express();
+const firebaseConfig = {
+  apiKey: "AIzaSyCYIBKtQeHN8-oe19DP-xAqIpGXFA6ykUY",
+  authDomain: "social-project-cc707.firebaseapp.com",
+  databaseURL: "https://social-project-cc707.firebaseio.com",
+  projectId: "social-project-cc707",
+  storageBucket: "social-project-cc707.appspot.com",
+  messagingSenderId: "887851021548",
+  appId: "1:887851021548:web:12125b52bb8ffd51eea1c9",
+  measurementId: "G-GEN7V44F6N",
+};
 
+const firebase = require("firebase");
+firebase.initializeApp(firebaseConfig);
+
+const db = admin.firestore();
+
+// get
 app.get("/chirps", (req, res) => {
-  admin
-    .firestore()
-    .collection("chirps")
+  db.collection("chirps")
     .orderBy("createdAt", "desc")
     .get()
     .then((data) => {
@@ -31,16 +44,15 @@ app.get("/chirps", (req, res) => {
     .catch((err) => console.error(err));
 });
 
+// post
 app.post("/chirp", (req, res) => {
   const newChirp = {
     body: req.body.body,
     userHandle: req.body.userHandle,
-    createdAt: admin.firestore.Timestamp.fromDate(new Date()),
+    createdAt: new Date().toISOString(),
   };
 
-  admin
-    .firestore()
-    .collection("chirps")
+  db.collection("chirps")
     .add(newChirp)
     .then((doc) => {
       res.json({ message: `document ${doc.id} created successfully` });
@@ -48,6 +60,42 @@ app.post("/chirp", (req, res) => {
     .catch((err) => {
       res.status(500).json({ error: "something went wrong." });
       console.error(err);
+    });
+});
+
+// sign up
+app.post("/signup", (req, res) => {
+  const newUser = {
+    email: req.body.email,
+    password: req.body.password,
+    confirmPassword: req.body.confirmPassword,
+    handle: req.body.handle,
+  };
+
+  db.doc(`/users/${newUser.handle}`)
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        return res.status(400).json({ handle: "this handle is already taken" });
+      } else {
+        return firebase
+          .auth()
+          .createUserWithEmailAndPassword(newUser.email, newUser.password);
+      }
+    })
+    .then((data) => {
+      return data.user.getIdToken();
+    })
+    .then((token) => {
+      return res.status(201).json({ token });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.code === "auth/email-already-in-use") {
+        return res.status(400).json({ email: "email is already in use" });
+      } else {
+        return res.status(500).json({ error: err.code });
+      }
     });
 });
 
