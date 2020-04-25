@@ -30,7 +30,7 @@ exports.validateSignUpData = (data) => {
   };
 };
 
-exports.validateLogInData = (data) => {
+exports.validateLoginData = (data) => {
   let errors = {};
 
   if (isEmpty(data.email)) errors.email = "must not be empty";
