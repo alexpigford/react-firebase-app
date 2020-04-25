@@ -22,3 +22,26 @@ let db = {
     },
   ],
 };
+
+const userDetails = {
+  credentials: {
+    userId: "ahahahah",
+    email: "user@email.com",
+    handle: "user",
+    createdAt: "2020-04-24T16:56:17.572Z",
+    imageUrl: "image/ha/haha",
+    bio: "hi, this is my bio",
+    website: "https://user.com",
+    location: "Denver, CO",
+  },
+  likes: [
+    {
+      userHandle: "user",
+      screamId: "hahahaha",
+    },
+    {
+      userHandle: "user",
+      screamId: "jajajajaj",
+    },
+  ],
+};

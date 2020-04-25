@@ -111,6 +111,33 @@ exports.addUserDetails = (req, res) => {
     });
 };
 
+// get user details
+exports.getAuthenticatedUser = (req, res) => {
+  let userData = {};
+  db.doc(`/users/${req.user.handle}`)
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        userData.credentials = doc.data();
+        return db
+          .collection("likes")
+          .where("userHandle", "==", req.user.handle)
+          .get();
+      }
+    })
+    .then((data) => {
+      userData.likes = [];
+      data.forEach((doc) => {
+        userData.likes.push(doc.data());
+      });
+      return res.json(userData);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
+
 // upload user profile image
 exports.uploadImage = (req, res) => {
   const BusBoy = require("busboy");
