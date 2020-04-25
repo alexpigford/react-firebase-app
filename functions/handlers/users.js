@@ -8,8 +8,10 @@ firebase.initializeApp(firebaseConfig);
 const {
   validateSignUpData,
   validateLoginData,
+  reduceUserDetails,
 } = require("../utility/validators");
 
+// user sign up
 exports.signUp = (req, res) => {
   const newUser = {
     email: req.body.email,
@@ -64,6 +66,7 @@ exports.signUp = (req, res) => {
     });
 };
 
+// user login
 exports.login = (req, res) => {
   const user = {
     email: req.body.email,
@@ -93,6 +96,22 @@ exports.login = (req, res) => {
     });
 };
 
+// add user details
+exports.addUserDetails = (req, res) => {
+  let userDetails = reduceUserDetails(req.body);
+
+  db.doc(`/users/${req.user.handle}`)
+    .update(userDetails)
+    .then(() => {
+      return res.json({ message: "details added successfully" });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
+
+// upload user profile image
 exports.uploadImage = (req, res) => {
   const BusBoy = require("busboy");
   const path = require("path");
