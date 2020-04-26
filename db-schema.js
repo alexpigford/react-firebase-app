@@ -21,6 +21,14 @@ let db = {
       commentCount: 2,
     },
   ],
+  replies: [
+    {
+      userHandle: "user",
+      chirpId: "ahahahaha",
+      body: "solid reply",
+      createdAt: "2020-04-24T16:56:17.572Z",
+    },
+  ],
 };
 
 const userDetails = {
