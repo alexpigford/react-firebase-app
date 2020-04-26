@@ -9,6 +9,8 @@ const {
   postAChirp,
   getChirp,
   replyToChirp,
+  likeChirp,
+  unlikeChirp,
 } = require("./handlers/chirps");
 const {
   signUp,
@@ -23,8 +25,8 @@ app.get("/chirps", getAllChirps);
 app.post("/chirp", FBAuth, postAChirp);
 app.get("/chirp/:chirpId", getChirp);
 // TODO: delete chirp
-// TODO: like a chirp
-// TODO: unlink a chirp
+app.get("/chirp/:chirpId/like", FBAuth, likeChirp);
+app.get("/chirp/:chirpId/unlike", FBAuth, unlikeChirp);
 app.post("/chirp/:chirpId/reply", FBAuth, replyToChirp);
 
 // users routes

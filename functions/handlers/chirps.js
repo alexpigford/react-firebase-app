@@ -1,5 +1,6 @@
 const { db } = require("../utility/admin");
 
+// get all chirps
 exports.getAllChirps = (req, res) => {
   db.collection("chirps")
     .orderBy("createdAt", "desc")
@@ -19,6 +20,7 @@ exports.getAllChirps = (req, res) => {
     .catch((err) => console.error(err));
 };
 
+// post a chirp
 exports.postAChirp = (req, res) => {
   if (req.body.body.trim() === "") {
     return res.status(400).json({ body: "body must not be empty" });
@@ -27,13 +29,18 @@ exports.postAChirp = (req, res) => {
   const newChirp = {
     body: req.body.body,
     userHandle: req.user.handle,
+    userImage: req.user.imageUrl,
     createdAt: new Date().toISOString(),
+    likeCount: 0,
+    replyCount: 0,
   };
 
   db.collection("chirps")
     .add(newChirp)
     .then((doc) => {
-      res.json({ message: `document ${doc.id} created successfully` });
+      const responseChirp = newChirp;
+      responseChirp.chirpId = doc.id;
+      res.json(responseChirp);
     })
     .catch((err) => {
       res.status(500).json({ error: "something went wrong" });
@@ -98,5 +105,98 @@ exports.replyToChirp = (req, res) => {
     .catch((err) => {
       console.log(err);
       res.status(500).json({ error: "something went wrong" });
+    });
+};
+
+// like a chirp
+exports.likeChirp = (req, res) => {
+  const likeDocument = db
+    .collection("likes")
+    .where("userHandle", "==", req.user.handle)
+    .where("chirpId", "==", req.params.chirpId)
+    .limit(1);
+
+  const chirpDocument = db.doc(`/chirps/${req.params.chirpId}`);
+
+  let chirpData = {};
+
+  chirpDocument
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        chirpData = doc.data();
+        chirpData.chirpId = doc.id;
+        return likeDocument.get();
+      } else {
+        return res.status(404).json({ error: "chirp not found" });
+      }
+    })
+    .then((data) => {
+      if (data.empty) {
+        return db
+          .collection("likes")
+          .add({
+            chirpId: req.params.chirpId,
+            userHandle: req.user.handle,
+          })
+          .then(() => {
+            chirpData.likeCount++;
+            return chirpDocument.update({ likeCount: chirpData.likeCount });
+          })
+          .then(() => {
+            return res.json(chirpData);
+          });
+      } else {
+        return res.status(400).json({ error: "chirp already liked" });
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: err.code });
+    });
+};
+
+// unlike a chirp
+exports.unlikeChirp = (req, res) => {
+  const likeDocument = db
+    .collection("likes")
+    .where("userHandle", "==", req.user.handle)
+    .where("chirpId", "==", req.params.chirpId)
+    .limit(1);
+
+  const chirpDocument = db.doc(`/chirps/${req.params.chirpId}`);
+
+  let chirpData = {};
+
+  chirpDocument
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        chirpData = doc.data();
+        chirpData.chirpId = doc.id;
+        return likeDocument.get();
+      } else {
+        return res.status(404).json({ error: "chirp not found" });
+      }
+    })
+    .then((data) => {
+      if (data.empty) {
+        return res.status(400).json({ error: "chirp not liked" });
+      } else {
+        return db
+          .doc(`/likes/${data.docs[0].id}`)
+          .delete()
+          .then(() => {
+            chirpData.likeCount--;
+            return chirpDocument.update({ likeCount: chirpData.likeCount });
+          })
+          .then(() => {
+            res.json(chirpData);
+          });
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: err.code });
     });
 };
