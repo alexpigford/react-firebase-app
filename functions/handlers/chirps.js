@@ -203,3 +203,27 @@ exports.unlikeChirp = (req, res) => {
       res.status(500).json({ error: err.code });
     });
 };
+
+// delete a chirp
+exports.deleteChirp = (req, res) => {
+  const document = db.doc(`/chirps/${req.params.chirpId}`);
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "chirp not found" });
+      }
+      if (doc.data().userHandle !== req.user.handle) {
+        return res.status(403).json({ error: "unauthorized" });
+      } else {
+        return document.delete();
+      }
+    })
+    .then(() => {
+      res.json({ message: "chirp deleted successfully" });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};

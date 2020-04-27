@@ -11,6 +11,7 @@ const {
   replyToChirp,
   likeChirp,
   unlikeChirp,
+  deleteChirp,
 } = require("./handlers/chirps");
 const {
   signUp,
@@ -24,7 +25,7 @@ const {
 app.get("/chirps", getAllChirps);
 app.post("/chirp", FBAuth, postAChirp);
 app.get("/chirp/:chirpId", getChirp);
-// TODO: delete chirp
+app.delete("/chirp/:chirpId", FBAuth, deleteChirp);
 app.get("/chirp/:chirpId/like", FBAuth, likeChirp);
 app.get("/chirp/:chirpId/unlike", FBAuth, unlikeChirp);
 app.post("/chirp/:chirpId/reply", FBAuth, replyToChirp);

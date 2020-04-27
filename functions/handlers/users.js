@@ -151,9 +151,9 @@ exports.uploadImage = (req, res) => {
   let imageToBeUploaded = {};
 
   busboy.on("file", (fieldname, file, filename, enconding, mimetype) => {
-    console.log("fieldname: ", fieldname);
-    console.log("filename: ", filename);
-    console.log("mimetype: ", mimetype);
+    // console.log("fieldname: ", fieldname);
+    // console.log("filename: ", filename);
+    // console.log("mimetype: ", mimetype);
     if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
       return res.status(400).json({ error: "wrong file type" });
     }
