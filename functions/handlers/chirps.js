@@ -97,6 +97,9 @@ exports.replyToChirp = (req, res) => {
       if (!doc.exists) {
         return res.status(404).json({ error: "chirp not found" });
       }
+      return doc.ref.update({ replyCount: doc.data().replyCount + 1 });
+    })
+    .then(() => {
       return db.collection("replies").add(newReply);
     })
     .then(() => {
