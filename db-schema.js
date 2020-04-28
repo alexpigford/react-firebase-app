@@ -29,6 +29,16 @@ let db = {
       createdAt: "2020-04-24T16:56:17.572Z",
     },
   ],
+  notifications: [
+    {
+      recipient: "user",
+      sender: "alex",
+      read: "true | false",
+      chirpId: "xdxdxdxd",
+      type: "like | reply",
+      createdAt: "2020-04-24T16:56:17.572Z",
+    },
+  ],
 };
 
 const userDetails = {
@@ -45,11 +55,11 @@ const userDetails = {
   likes: [
     {
       userHandle: "user",
-      screamId: "hahahaha",
+      chirpId: "hahahaha",
     },
     {
       userHandle: "user",
-      screamId: "jajajajaj",
+      chirpId: "jajajajaj",
     },
   ],
 };
