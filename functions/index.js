@@ -19,6 +19,8 @@ const {
   uploadImage,
   addUserDetails,
   getAuthenticatedUser,
+  getUserDetails,
+  markNotificationsRead,
 } = require("./handlers/users");
 
 // chirp routes
@@ -32,6 +34,8 @@ app.delete("/chirp/:chirpId", FBAuth, deleteChirp);
 
 // users routes
 app.get("/user", FBAuth, getAuthenticatedUser);
+app.get("/user/:handle", getUserDetails);
+app.post("/notifications", FBAuth, markNotificationsRead);
 app.post("/signup", signUp);
 app.post("/login", login);
 app.post("/user/image", FBAuth, uploadImage);
