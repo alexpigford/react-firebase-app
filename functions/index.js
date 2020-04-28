@@ -47,10 +47,14 @@ exports.api = functions.https.onRequest(app);
 exports.createNotificationOnLike = functions.firestore
   .document("likes/{id}")
   .onCreate((snapshot) => {
-    db.doc(`/chirps/${snapshot.data().chirpId}`)
+    return db
+      .doc(`/chirps/${snapshot.data().chirpId}`)
       .get()
       .then((doc) => {
-        if (doc.exists) {
+        if (
+          doc.exists &&
+          doc.data().userHandle !== snapshot.data().userHandle
+        ) {
           return db.doc(`/notifications/${snapshot.id}`).set({
             createdAt: new Date().toISOString(),
             recipient: doc.data().userHandle,
@@ -61,24 +65,16 @@ exports.createNotificationOnLike = functions.firestore
           });
         }
       })
-      .then(() => {
-        return;
-      })
-      .catch((err) => {
-        console.error(err);
-        return;
-      });
+      .catch((err) => console.error(err));
   });
 
 // delete notification on unlike
 exports.deleteNotificationOnUnlike = functions.firestore
   .document("likes/{id}")
   .onDelete((snapshot) => {
-    db.doc(`/notifications/${snapshot.id}`)
+    return db
+      .doc(`/notifications/${snapshot.id}`)
       .delete()
-      .then(() => {
-        return;
-      })
       .catch((err) => {
         console.error(err);
         return;
@@ -89,10 +85,14 @@ exports.deleteNotificationOnUnlike = functions.firestore
 exports.createNotificationOnReply = functions.firestore
   .document("replies/{id}")
   .onCreate((snapshot) => {
-    db.doc(`/chirps/${snapshot.data().chirpId}`)
+    return db
+      .doc(`/chirps/${snapshot.data().chirpId}`)
       .get()
       .then((doc) => {
-        if (doc.exists) {
+        if (
+          doc.exists &&
+          doc.data().userHandle !== snapshot.data().userHandle
+        ) {
           return db.doc(`/notifications/${snapshot.id}`).set({
             createdAt: new Date().toISOString(),
             recipient: doc.data().userHandle,
@@ -103,11 +103,65 @@ exports.createNotificationOnReply = functions.firestore
           });
         }
       })
-      .then(() => {
-        return;
-      })
       .catch((err) => {
         console.error(err);
         return;
+      });
+  });
+
+exports.onUserImageChange = functions.firestore
+  .document("/users/{userId}")
+  .onUpdate((change) => {
+    console.log(change.before.data());
+    console.log(change.after.data());
+    if (change.before.data().imageUrl !== change.after.data().imageUrl) {
+      console.log("image has changed");
+      const batch = db.batch();
+      return db
+        .collection("chirps")
+        .where("userHandle", "==", change.before.data().handle)
+        .get()
+        .then((data) => {
+          data.forEach((doc) => {
+            const chirp = db.doc(`/chirps/${doc.id}`);
+            batch.update(chirp, { userImage: change.after.data().imageUrl });
+          });
+          return batch.commit();
+        });
+    } else return true;
+  });
+
+exports.onChirpDelete = functions.firestore
+  .document("/chirps/{chirpId}")
+  .onDelete((snapshot, context) => {
+    const chirpId = context.params.chirpId;
+    const batch = db.batch();
+    return db
+      .collection("replies")
+      .where("chirpId", "==", chirpId)
+      .get()
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/replies/${doc.id}`));
+        });
+        return db.collection("likes").where("chirpId", "==", chirpId).get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/likes/${doc.id}`));
+        });
+        return db
+          .collection("notifications")
+          .where("chirpId", "==", chirpId)
+          .get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`/notifications/${doc.id}`));
+        });
+        return batch.commit();
+      })
+      .catch((err) => {
+        console.error(err);
       });
   });

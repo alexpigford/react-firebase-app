@@ -13,6 +13,9 @@ exports.getAllChirps = (req, res) => {
           body: doc.data().body,
           userHandle: doc.data().userHandle,
           createdAt: doc.data().createdAt,
+          replyCount: doc.data().replyCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage,
         });
       });
       return res.json(chirps);
@@ -81,7 +84,7 @@ exports.getChirp = (req, res) => {
 // reply to a chirp
 exports.replyToChirp = (req, res) => {
   if (req.body.body.trim() === "")
-    return res.status(400).json({ error: "must not be empty" });
+    return res.status(400).json({ reply: "must not be empty" });
 
   const newReply = {
     body: req.body.body,
